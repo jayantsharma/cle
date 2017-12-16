@@ -6,12 +6,12 @@ import os
 import shutil
 import sys
 import tempfile
-import theano
-import theano.tensor as T
+# import theano
+# import theano.tensor as T
 
-from collections import deque
+from collections import deque, OrderedDict
 from numpy.lib.stride_tricks import as_strided
-from theano.compat.python2x import OrderedDict
+# from theano.compat.python2x import OrderedDict
 
 
 logger = logging.getLogger(__name__)
