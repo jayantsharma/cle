@@ -1,5 +1,11 @@
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import str
+from builtins import object
 import ipdb
-import cPickle
+import pickle
 import logging
 import numpy as np
 import os
@@ -46,7 +52,7 @@ class GradientClipping(Extension):
         grads = mainloop.grads
         g_norm = 0.
 
-        for p, g in grads.items():
+        for p, g in list(grads.items()):
             g /= T.cast(self.batch_size, dtype=theano.config.floatX)
             grads[p] = g
             g_norm += (g**2).sum()
@@ -58,10 +64,10 @@ class GradientClipping(Extension):
         scaler = self.scaler / T.maximum(self.scaler, g_norm)
 
         if self.check_nan:
-            for p, g in grads.items():
+            for p, g in list(grads.items()):
                 grads[p] = T.switch(not_finite, 0.1 * p, g * scaler)
         else:
-            for p, g in grads.items():
+            for p, g in list(grads.items()):
                 grads[p] = g * scaler
 
         mainloop.grads = grads
@@ -224,7 +230,7 @@ class Picklize(Extension):
                 import sys
                 sys.setrecursionlimit(50000)
                 f = open(path, 'wb')
-                cPickle.dump(mainloop, f, -1)
+                pickle.dump(mainloop, f, -1)
                 f.close()
                 #secure_pickle_dump(mainloop, path)
             except Exception:
@@ -242,7 +248,7 @@ class Picklize(Extension):
                 import sys
                 sys.setrecursionlimit(50000)
                 f = open(force_path, 'wb')
-                cPickle.dump(mainloop, f, -1)
+                pickle.dump(mainloop, f, -1)
                 f.close()
                 #secure_pickle_dump(mainloop, path)
             except Exception:
@@ -302,7 +308,7 @@ class EarlyStopping(Extension):
                         import sys
                         sys.setrecursionlimit(50000)
                         f = open(path, 'wb')
-                        cPickle.dump(mainloop, f, -1)
+                        pickle.dump(mainloop, f, -1)
                         f.close()
                         #secure_pickle_dump(mainloop, path)
                     except Exception:
@@ -322,7 +328,7 @@ class EarlyStopping(Extension):
                             import sys
                             sys.setrecursionlimit(50000)
                             f = open(force_path, 'wb')
-                            cPickle.dump(mainloop, f, -1)
+                            pickle.dump(mainloop, f, -1)
                             f.close()
                             #secure_pickle_dump(mainloop, path)
                         except Exception:
@@ -346,7 +352,7 @@ class WeightDecay(Extension):
 
             WRITEME
         """
-        for k, p in mainloop.model.params.items():
+        for k, p in list(mainloop.model.params.items()):
             for key in self.keys:
                 if key in k:
                     mainloop.cost += self.lambd * T.sqr(p).sum()
@@ -371,7 +377,7 @@ class WeightNorm(Extension):
 
             WRITEME
         """
-        for k, p in mainloop.updates.items():
+        for k, p in list(mainloop.updates.items()):
             for key in self.keys:
                 if key in str(k):
                     token = 1

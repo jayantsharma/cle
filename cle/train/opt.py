@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 import ipdb
 import logging
 import theano
@@ -66,7 +69,7 @@ class Momentum(Optimizer):
         """
         updates = OrderedDict()
 
-        for p, g in grads.items():
+        for p, g in list(grads.items()):
             lr_scaler = self.lr_scalers.get(str(p), 1.)
             u = sharedX(p.get_value() * 0.)
             u_t = self.mom * u - self.lr * g
@@ -105,7 +108,7 @@ class RMSProp(Optimizer):
         """
         updates = OrderedDict()
 
-        for p, g in grads.items():
+        for p, g in list(grads.items()):
             lr_scaler = self.lr_scalers.get(str(p), 1.)
             u = sharedX(p.get_value() * 0.)
             avg_grad = sharedX(p.get_value() * 0.)
@@ -157,7 +160,7 @@ class Adam(Optimizer):
         b1_t = self.b1 ** i_t
         b2_t = self.b2 ** i_t
 
-        for p, g in grads.items():
+        for p, g in list(grads.items()):
             lr_scaler = self.lr_scalers.get(str(p), 1.)
             m = sharedX(p.get_value() * 0.)
             v = sharedX(p.get_value() * 0.)
@@ -197,7 +200,7 @@ class Adam2(Adam):
         lr_t = self.lr * T.sqrt(1. - b2_t) / (1 - b1_t)
         #b1 = 1 - self.b1 * self.lambd**i
 
-        for p, g in grads.items():
+        for p, g in list(grads.items()):
             lr_scaler = self.lr_scalers.get(str(p), 1.)
             m = sharedX(p.get_value() * 0.)
             v = sharedX(p.get_value() * 0.)

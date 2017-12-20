@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import ipdb
 import numpy as np
 import theano
@@ -89,7 +90,7 @@ nodes = [h1, h2, h3, output]
 for node in nodes:
     node.initialize()
 
-params = flatten([node.get_params().values() for node in nodes])
+params = flatten([list(node.get_params().values()) for node in nodes])
 
 step_count = sharedX(0, name='step_count')
 last_h = np.zeros((batch_size, 400), dtype=np.float32)

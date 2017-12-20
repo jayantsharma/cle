@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import ipdb
 import numpy as np
 import theano
@@ -53,7 +54,7 @@ def inner_fn(s1_tm1, s2_tm1, s3_tm1, iter_):
                 outputs_info=[s1_0, s2_0, s3_0, x],
                 n_steps=ts)
 
-for k, v in updates.iteritems():
+for k, v in updates.items():
     k.default_update = v
 
 test_fn = theano.function(inputs=[x, ts],

@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import object
 import ipdb
 import theano
 
@@ -25,10 +27,10 @@ class Model(object):
         self.params = params
         self.updates = OrderedDict()
         if updates is not None:
-            for update in updates.items():
+            for update in list(updates.items()):
                 self.updates[update[0]] = update[1]
 
     def set_updates(self, updates):
 
-        for update in updates.items():
+        for update in list(updates.items()):
             self.updates[update[0]] = update[1]

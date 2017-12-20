@@ -1,3 +1,8 @@
+from __future__ import unicode_literals
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
 import ipdb
 import numpy as np
 
@@ -19,7 +24,7 @@ class Data(object):
         if multi_process > 0:
             self.queue = Queue(2**15)
             processes = [None] * multi_process
-            for mid in xrange(multi_process):
+            for mid in range(multi_process):
                 processes[mid] = Process(target=self.multi_process_slices,
                                          args=(mid,))
                 processes[mid].start()
@@ -79,14 +84,14 @@ class Iterator(object):
 
     def __iter__(self):
         if self.infinite_data:
-            for i in xrange(self.pseudo_n):
+            for i in range(self.pseudo_n):
                 yield self.data.slices()
         else:
             if self.shuffle:
                 self.data.shuffle()
             start = self.start
             end = self.end - self.end % self.batch_size
-            for idx in xrange(start, end, self.batch_size):
+            for idx in range(start, end, self.batch_size):
                 yield self.data.slices(idx, idx + self.batch_size)
 
 

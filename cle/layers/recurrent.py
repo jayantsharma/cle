@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import range
 import ipdb
 import numpy as np
 import theano
@@ -7,7 +9,7 @@ from cle.cle.layers import StemCell, InitCell
 from cle.cle.utils import tolist
 from cle.cle.utils.op import add_noise
 
-from itertools import izip
+
 
 from theano.compat.python2x import OrderedDict
 
@@ -46,7 +48,7 @@ class RecurrentLayer(StemCell):
     def get_init_state(self, batch_size):
 
         state = T.zeros((batch_size, self.nout), dtype=theano.config.floatX)
-        state = T.unbroadcast(state, *range(state.ndim))
+        state = T.unbroadcast(state, *list(range(state.ndim)))
 
         return state
 
@@ -54,7 +56,7 @@ class RecurrentLayer(StemCell):
 
         params = super(RecurrentLayer, self).initialize()
 
-        for recname, recout in self.recurrent.items():
+        for recname, recout in list(self.recurrent.items()):
             U_shape = (recout, self.nout)
             U_name = 'U_'+recname+'__'+self.name
             params[U_name] = self.init_U.get(U_shape)
@@ -85,7 +87,7 @@ class SimpleRecurrent(RecurrentLayer):
 
         z = T.zeros((X[0].shape[0], self.nout), dtype=theano.config.floatX)
 
-        for x, (parname, parout) in izip(X, self.parent.items()):
+        for x, (parname, parout) in zip(X, list(self.parent.items())):
             W = tparams['W_'+parname+'__'+self.name]
 
             if x.ndim == 1:
@@ -95,7 +97,7 @@ class SimpleRecurrent(RecurrentLayer):
             else:
                 z += T.dot(x[:, :parout], W)
 
-        for h, (recname, recout) in izip(H, self.recurrent.items()):
+        for h, (recname, recout) in zip(H, list(self.recurrent.items())):
             U = tparams['U_'+recname+'__'+self.name]
             z += T.dot(h[:, :recout], U)
 
@@ -117,7 +119,7 @@ class LSTM(RecurrentLayer):
     def get_init_state(self, batch_size):
 
         state = T.zeros((batch_size, 2*self.nout), dtype=theano.config.floatX)
-        state = T.unbroadcast(state, *range(state.ndim))
+        state = T.unbroadcast(state, *list(range(state.ndim)))
 
         return state
 
@@ -140,7 +142,7 @@ class LSTM(RecurrentLayer):
         z_t = H[0]
         z = T.zeros((X[0].shape[0], 4*self.nout), dtype=theano.config.floatX)
 
-        for x, (parname, parout) in izip(X, self.parent.items()):
+        for x, (parname, parout) in zip(X, list(self.parent.items())):
             W = tparams['W_'+parname+'__'+self.name]
 
             if x.ndim == 1:
@@ -150,7 +152,7 @@ class LSTM(RecurrentLayer):
             else:
                 z += T.dot(x[:, :parout], W)
 
-        for h, (recname, recout) in izip(H, self.recurrent.items()):
+        for h, (recname, recout) in zip(H, list(self.recurrent.items())):
             U = tparams['U_'+recname+'__'+self.name]
             z += T.dot(h[:, :recout], U)
 
@@ -182,16 +184,16 @@ class LSTM(RecurrentLayer):
         params = OrderedDict()
         N = self.nout
 
-        for parname, parout in self.parent.items():
+        for parname, parout in list(self.parent.items()):
             W_shape = (parout, 4*N)
             W_name = 'W_' + parname + '__' + self.name
             params[W_name] = self.init_W.get(W_shape)
 
-        for recname, recout in self.recurrent.items():
+        for recname, recout in list(self.recurrent.items()):
             M = recout
             U = self.init_U.ortho((M, N))
 
-            for j in xrange(3):
+            for j in range(3):
                 U = np.concatenate([U, self.init_U.ortho((M, N))], axis=-1)
 
             U_name = 'U_'+recname+'__'+self.name
@@ -230,7 +232,7 @@ class GFLSTM(LSTM):
         Nm = len(self.recurrent)
         z = T.zeros((X[0].shape[0], 4*self.nout+Nm), dtype=theano.config.floatX)
 
-        for x, (parname, parout) in izip(X, self.parent.items()):
+        for x, (parname, parout) in zip(X, list(self.parent.items())):
             W = tparams['W_'+parname+'__'+self.name]
 
             if x.ndim == 1:
@@ -240,7 +242,7 @@ class GFLSTM(LSTM):
             else:
                 z += T.dot(x[:, :parout], W)
 
-        for h, (recname, recout) in izip(H, self.recurrent.items()):
+        for h, (recname, recout) in zip(H, list(self.recurrent.items())):
             U = tparams['U_'+recname+'__'+self.name]
             z = T.inc_subtensor(
                 z[:, self.nout:],
@@ -257,7 +259,7 @@ class GFLSTM(LSTM):
         c_t = z[:, :self.nout]
 
         for i, (h, (recname, recout)) in\
-            enumerate(izip(H, self.recurrent.items())):
+            enumerate(zip(H, list(self.recurrent.items()))):
             gated_h = h[:, :recout] * gron[:, i].dimshuffle(0, 'x')
             U = tparams['U_'+recname+'__'+self.name]
             c_t += T.dot(gated_h, U[:, :self.nout])
@@ -284,16 +286,16 @@ class GFLSTM(LSTM):
         N = self.nout
         Nm = len(self.recurrent)
 
-        for parname, parout in self.parent.items():
+        for parname, parout in list(self.parent.items()):
             W_shape = (parout, 4*N+Nm)
             W_name = 'W_' + parname + '__' + self.name
             params[W_name] = self.init_W.get(W_shape)
 
-        for recname, recout in self.recurrent.items():
+        for recname, recout in list(self.recurrent.items()):
             M = recout
             U = self.init_U.ortho((M, N))
 
-            for j in xrange(3):
+            for j in range(3):
                 U = np.concatenate([U, self.init_U.ortho((M, N))], axis=-1)
 
             U = np.concatenate([U, self.init_U.rand((M, Nm))], axis=-1)
@@ -332,7 +334,7 @@ class GRU(RecurrentLayer):
         z_tm1 = H[0]
         z = T.zeros((X[0].shape[0], 3*self.nout), dtype=theano.config.floatX)
 
-        for x, (parname, parout) in izip(X, self.parent.items()):
+        for x, (parname, parout) in zip(X, list(self.parent.items())):
             W = tparams['W_'+parname+'__'+self.name]
 
             if x.ndim == 1:
@@ -345,7 +347,7 @@ class GRU(RecurrentLayer):
             else:
                 z += T.dot(x[:, :parout], W)
 
-        for h, (recname, recout) in izip(H, self.recurrent.items()):
+        for h, (recname, recout) in zip(H, list(self.recurrent.items())):
             U = tparams['U_'+recname+'__'+self.name]
             z = T.inc_subtensor(
                 z[:, self.nout:],
@@ -361,7 +363,7 @@ class GRU(RecurrentLayer):
         # Update hidden & cell states
         c_t = T.zeros_like(z_tm1)
 
-        for h, (recname, recout) in izip(H, self.recurrent.items()):
+        for h, (recname, recout) in zip(H, list(self.recurrent.items())):
             U = tparams['U_'+recname+'__'+self.name]
             c_t += T.dot(h[:, :recout], U[:, :self.nout])
 
@@ -376,16 +378,16 @@ class GRU(RecurrentLayer):
         params = OrderedDict()
         N = self.nout
 
-        for parname, parout in self.parent.items():
+        for parname, parout in list(self.parent.items()):
             W_shape = (parout, 3*N)
             W_name = 'W_' + parname + '__' + self.name
             params[W_name] = self.init_W.get(W_shape)
 
-        for recname, recout in self.recurrent.items():
+        for recname, recout in list(self.recurrent.items()):
             M = recout
             U = self.init_U.ortho((M, N))
 
-            for j in xrange(2):
+            for j in range(2):
                 U = np.concatenate([U, self.init_U.ortho((M, N))], axis=-1)
 
             U_name = 'U_'+recname+'__'+self.name
@@ -424,7 +426,7 @@ class GRU2(GRU):
         z_tm1 = H[0]
         z = T.zeros((X[0].shape[0], 3*self.nout), dtype=theano.config.floatX)
 
-        for x, (parname, parout) in izip(X, self.parent.items()):
+        for x, (parname, parout) in zip(X, list(self.parent.items())):
             W = tparams['W_'+parname+'__'+self.name]
 
             if x.ndim == 1:
@@ -434,7 +436,7 @@ class GRU2(GRU):
             else:
                 z += T.dot(x[:, :parout], W)
 
-        for h, (recname, recout) in izip(H, self.recurrent.items()):
+        for h, (recname, recout) in zip(H, list(self.recurrent.items())):
             U = tparams['U_'+recname+'__'+self.name]
             z = T.inc_subtensor(
                 z[:, self.nout:],
@@ -450,7 +452,7 @@ class GRU2(GRU):
         # Update hidden & cell states
         c_t = T.zeros_like(z_tm1)
 
-        for h, (recname, recout) in izip(H, self.recurrent.items()):
+        for h, (recname, recout) in zip(H, list(self.recurrent.items())):
             U = tparams['U_'+recname+'__'+self.name]
             c_t += T.dot(r_on * h[:, :recout], U[:, :self.nout])
 
@@ -489,7 +491,7 @@ class GFGRU(GRU):
         Nm = len(self.recurrent)
         z = T.zeros((X[0].shape[0], 3*self.nout+Nm), dtype=theano.config.floatX)
 
-        for x, (parname, parout) in izip(X, self.parent.items()):
+        for x, (parname, parout) in zip(X, list(self.parent.items())):
             W = tparams['W_'+parname+'__'+self.name]
 
             if x.ndim == 1:
@@ -499,7 +501,7 @@ class GFGRU(GRU):
             else:
                 z += T.dot(x[:, :parout], W)
 
-        for h, (recname, recout) in izip(H, self.recurrent.items()):
+        for h, (recname, recout) in zip(H, list(self.recurrent.items())):
             U = tparams['U_'+recname+'__'+self.name]
             z = T.inc_subtensor(
                 z[:, self.nout:],
@@ -517,7 +519,7 @@ class GFGRU(GRU):
         c_t = T.zeros_like(z_tm1)
 
         for i, (h, (recname, recout)) in\
-            enumerate(izip(H, self.recurrent.items())):
+            enumerate(zip(H, list(self.recurrent.items()))):
             gated_h = h[:, :recout] * gron[:, i].dimshuffle(0, 'x')
             U = tparams['U_'+recname+'__'+self.name]
             c_t += T.dot(gated_h, U[:, :self.nout])
@@ -534,16 +536,16 @@ class GFGRU(GRU):
         N = self.nout
         Nm = len(self.recurrent)
 
-        for parname, parout in self.parent.items():
+        for parname, parout in list(self.parent.items()):
             W_shape = (parout, 3*N+Nm)
             W_name = 'W_' + parname + '__' + self.name
             params[W_name] = self.init_W.get(W_shape)
 
-        for recname, recout in self.recurrent.items():
+        for recname, recout in list(self.recurrent.items()):
             M = recout
             U = self.init_U.ortho((M, N))
 
-            for j in xrange(2):
+            for j in range(2):
                 U = np.concatenate([U, self.init_U.ortho((M, N))], axis=-1)
             U = np.concatenate([U, self.init_U.rand((M, Nm))], axis=-1)
             U_name = 'U_'+recname+'__'+self.name

@@ -1,3 +1,7 @@
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import range
+from builtins import object
 import ipdb
 import theano
 
@@ -35,33 +39,33 @@ class Net(object):
             self.nodes[node.name] = node
 
     def initialize(self):
-        for node in self.nodes.values():
+        for node in list(self.nodes.values()):
             node.initialize()
 
     def set_batch_size(self, batch_size):
-        for node in self.nodes.values():
+        for node in list(self.nodes.values()):
             if hasattr(node, 'batch_size'):
                 node.batch_size = batch_size
 
     def set_graph(self):
         self.graph = {}
-        for nname, node in self.nodes.items():
+        for nname, node in list(self.nodes.items()):
             parent = node.parent
-            for par in tolist(parent.keys()):
-                if par in self.inputs.keys():
+            for par in tolist(list(parent.keys())):
+                if par in list(self.inputs.keys()):
                     continue
-                if par in self.graph.keys():
+                if par in list(self.graph.keys()):
                     self.graph[par] =\
                         tolist(self.graph[par]) + [node.name]
                 else:
                     self.graph[par] = node.name
         sorted_nodes = topological_sort(self.graph)
         if len(self.graph) > 0:
-            for i in xrange(len(self.nodes)):
+            for i in range(len(self.nodes)):
                 self.sorted_nodes.append(sorted_nodes.popleft())
         for node in self.nodes:
             parent = self.nodes[node].parent
-            for par in tolist(parent.keys()):
+            for par in tolist(list(parent.keys())):
                 try:
                     self.nodes[node].parent[par] = self.inputs_dim[par]
                 except:
@@ -78,7 +82,7 @@ class Net(object):
                             self.nodes[node].parent[par] = self.nodes[par].outshape
             if hasattr(node, 'recurrent'):
                 recurrent = self.nodes[node].recurrent
-                for rec in tolist(recurrent.keys()):
+                for rec in tolist(list(recurrent.keys())):
                     self.nodes[node].recurrent[rec] = self.nodes[rec].nout
 
     def build_graph(self):
@@ -99,7 +103,7 @@ class Net(object):
         self.iterators = kwargs.pop('iterators', None)
         self.nonseq_inputs = kwargs.pop('nonseq_inputs', None)
         self.nNone = 0
-        inputs = self.inputs.values()
+        inputs = list(self.inputs.values())
         seqs = []
         outputs = []
         nonseqs = []
@@ -108,7 +112,7 @@ class Net(object):
                 nonseqs.append(inputs.pop(i))
         self.input_args = OrderedDict()
         self.recur_args = OrderedDict()
-        for name, node in self.nodes.items():
+        for name, node in list(self.nodes.items()):
             if hasattr(node, 'get_init_state'):
                 self.recur_args[name] = node
                 state = node.get_init_state()
@@ -117,7 +121,7 @@ class Net(object):
         # Substitutes initial hidden state into a context
         if self.context_args is not None:
             for i, (nname, node) in enumerate(self.output_args.items()):
-                for aname, arg in self.context_args.items():
+                for aname, arg in list(self.context_args.items()):
                     if nname == aname:
                         outputs[i] = arg
         if self.iterators is None:
@@ -146,7 +150,7 @@ class Net(object):
             return result
         if len(updates) == 0:
             return result[-self.nNone:]
-        for k, v in updates.iteritems():
+        for k, v in updates.items():
             k.default_update = v
         return result[-self.nNone:], updates
 
@@ -157,7 +161,7 @@ class Net(object):
         recurrence = tolist(args[self.nseqs:self.nseqs+self.nrecur])
         inputs += tolist(args[self.nseqs+self.nrecur:self.nseqs+self.noutputs])
         nonseqs = tolist(args[self.nseqs+self.noutputs:])
-        for nname, node in self.nodes.items():
+        for nname, node in list(self.nodes.items()):
             for i, (aname, arg) in enumerate(self.recur_args.items()):
                 if node is arg:
                     node.rec_out = recurrence[i]
@@ -174,7 +178,7 @@ class Net(object):
                             break
                     if tok:
                         inp.append(self.nodes[par].out)
-                if self.nodes[node] in self.recur_args.values():
+                if self.nodes[node] in list(self.recur_args.values()):
                     rec_inp = []
                     recurrent = self.nodes[node].recurrent
                     for rec in recurrent:
@@ -199,7 +203,7 @@ class Net(object):
                             break
                     if tok:
                         inp.append(self.nodes[par].out)
-                if self.nodes[node] in self.recur_args.values():
+                if self.nodes[node] in list(self.recur_args.values()):
                     rec_inp = []
                     recurrent = self.nodes[node].recurrent
                     for rec in recurrent:
@@ -212,23 +216,23 @@ class Net(object):
         required_outputs = []
         if self.iterators is not None:
             for arg in self.iterators:
-                for node in self.nodes.values():
+                for node in list(self.nodes.values()):
                     if node is arg:
                         required_outputs.append(node.out)
         if self.output_args is not None:
             for arg in self.output_args:
-                for node in self.nodes.values():
+                for node in list(self.nodes.values()):
                     if node is arg:
                         required_outputs.append(node.out)
         return next_recurrence + required_outputs
 
     def get_params(self):
-        return flatten([node.get_params().values()
-                        for node in self.nodes.values()])
+        return flatten([list(node.get_params().values())
+                        for node in list(self.nodes.values())])
 
     def get_inputs(self):
         if len(self.inputs) != 0:
-            return self.inputs.values()
+            return list(self.inputs.values())
         else:
             return []
 
@@ -251,12 +255,12 @@ class Net(object):
             try:
                 del self.nodes[node]
             except KeyError:
-                print("There is no such node %s.", node)
+                print(("There is no such node %s.", node))
         else:
             try:
                 del self.nodes[node.name]
             except KeyError:
-                print("There is no such node %s.", node.name)
+                print(("There is no such node %s.", node.name))
         # In case of removing nodes, you need to manually
         # set graph after deleting all the nodes.
         self.params = self.get_params()

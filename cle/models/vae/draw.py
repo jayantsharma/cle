@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import ipdb
 import numpy as np
 import theano.tensor as T
@@ -5,7 +6,7 @@ import theano.tensor as T
 from cle.cle.layers import InitCell, StemCell
 from cle.cle.layers.feedforward import FullyConnectedLayer
 from cle.cle.layers.recurrent import RecurrentLayer
-from itertools import izip
+
 
 
 def batched_dot(A, B):     

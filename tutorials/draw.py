@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import ipdb
 import numpy as np
 import theano
@@ -150,7 +151,7 @@ nodes = [read_param, read, enc, phi_mu, phi_sig, prior, kl, dec, w, write_param,
 
 for node in nodes:
     node.initialize()
-params = flatten([node.get_params().values() for node in nodes])
+params = flatten([list(node.get_params().values()) for node in nodes])
 
 
 def inner_fn(enc_tm1, dec_tm1, canvas_tm1, x):
@@ -187,7 +188,7 @@ def inner_fn(enc_tm1, dec_tm1, canvas_tm1, x):
                 non_sequences=[x],
                 n_steps=n_steps)
 
-for k, v in updates.iteritems():
+for k, v in updates.items():
     k.default_update = v
 
 recon_term = NllBin(x, T.nnet.sigmoid(canvas_out[-1])).mean()

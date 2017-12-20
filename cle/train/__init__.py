@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import object
 import ipdb
 import logging
 import theano.tensor as T
@@ -10,7 +13,7 @@ from cle.cle.utils import PickleMixin, tolist
 from collections import defaultdict
 from theano.compat.python2x import OrderedDict
 
-from itertools import izip
+
 
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -53,7 +56,7 @@ class Training(PickleMixin, TheanoMixin):
 
         t0 = time.time()
         self.cost_fn = self.build_training_graph()
-        print "Elapsed compilation time: %f" % (time.time() - t0)
+        print("Elapsed compilation time: %f" % (time.time() - t0))
         if self.debug_print:
             from theano.printing import debugprint
             debugprint(self.cost_fn)
@@ -66,12 +69,12 @@ class Training(PickleMixin, TheanoMixin):
     def build_training_graph(self):
 
         self.run_extension('ext_regularize_pre_grad')
-        self.grads = OrderedDict(izip(self.model.params.values(),
-                                      T.grad(self.cost, self.model.params.values())))
+        self.grads = OrderedDict(zip(list(self.model.params.values()),
+                                      T.grad(self.cost, list(self.model.params.values()))))
         self.run_extension('ext_grad')
         grads = self.optimizer.get_updates(self.grads)
 
-        for key, val in grads.items():
+        for key, val in list(grads.items()):
             self.updates[key] = val
 
         self.run_extension('ext_regularize_post_grad')

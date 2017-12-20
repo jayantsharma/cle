@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 import ipdb
 import numpy as np
 import scipy
@@ -246,7 +249,7 @@ class StemCell(NonlinCell):
 
         params = OrderedDict()
 
-        for parname, parout in self.parent.items():
+        for parname, parout in list(self.parent.items()):
             W_shape = (parout, self.nout)
             W_name = 'W_' + parname + '__' + self.name
             params[W_name] = self.init_W.get(W_shape)

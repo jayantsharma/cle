@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import ipdb
 import theano.tensor as T
 
@@ -33,7 +34,7 @@ class Conv2DLayer(StemCell):
         self.tied_bias = tied_bias
         self.step_size = totuple(step_size)
         self.border_mode = border_mode
-        for i, par in enumerate(tolist(self.parent.keys())):
+        for i, par in enumerate(tolist(list(self.parent.keys()))):
              if len(parshape) != 0:
                 self.parent[par] = parshape[i]
            
@@ -44,7 +45,7 @@ class Conv2DLayer(StemCell):
         # that can embed multiple conv layer parents
         # into same hidden space.
         x = unpack(x)
-        parname, parshape = unpack(self.parent.items())
+        parname, parshape = unpack(list(self.parent.items()))
         z = T.zeros(self.outshape)
         W = self.params['W_'+parname+'__'+self.name]
         z += conv2d(
@@ -63,7 +64,7 @@ class Conv2DLayer(StemCell):
         return z
 
     def initialize(self):
-        parname, parshape = unpack(self.parent.items())
+        parname, parshape = unpack(list(self.parent.items()))
         outshape = self.outshape
         filtershape = self.filtershape
         batch_size = parshape[0]

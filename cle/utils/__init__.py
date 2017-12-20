@@ -1,5 +1,10 @@
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 import ipdb
-import cPickle
+import pickle
 import logging
 import numpy as np
 import os
@@ -11,6 +16,7 @@ import tempfile
 
 from collections import deque, OrderedDict
 from numpy.lib.stride_tricks import as_strided
+from functools import reduce
 # from theano.compat.python2x import OrderedDict
 
 
@@ -164,7 +170,7 @@ class PickleMixin(object):
             self._pickle_skip_list.append('endloop')
             self._pickle_skip_list.append('debug_print')
         state = OrderedDict()
-        for k, v in self.__dict__.items():
+        for k, v in list(self.__dict__.items()):
             if k not in self._pickle_skip_list:
                 state[k] = v
         return state
@@ -189,7 +195,7 @@ def secure_pickle_dump(object_, path):
         d = os.path.dirname(path)
         with tempfile.NamedTemporaryFile(delete=False, dir=d) as temp:
             try:
-                cPickle.dump(object_, temp, protocol=-1)
+                pickle.dump(object_, temp, protocol=-1)
             except RuntimeError as e:
                 if str(e).find('recursion') != -1:
                     logger.warning('cle.utils.secure_pickle_dump encountered '
@@ -199,7 +205,7 @@ def secure_pickle_dump(object_, path):
                     old_limit = sys.getrecursionlimit()
                 try:
                     sys.setrecursionlimit(50000)
-                    cPickle.dump(object_, temp, protocol=-1)
+                    pickle.dump(object_, temp, protocol=-1)
                 finally:
                     sys.setrecursionlimit(old_limit)
         shutil.move(temp.name, path)
@@ -216,7 +222,7 @@ def unpickle(path):
         WRITEME
     """
     f = open(path, 'rb')
-    m = cPickle.load(f)
+    m = pickle.load(f)
     f.close()
     return m
 
@@ -228,7 +234,7 @@ def initialize_from_pkl(arg, path):
         WRITEME
     """
     f = open(path, 'rb')
-    m = cPickle.load(f)
+    m = pickle.load(f)
     arg.__setstate__(m.__dict__)
     f.close()
 
@@ -236,7 +242,7 @@ def initialize_from_pkl(arg, path):
 # push parameters to Theano shared variables
 def zipp(params, tparams):
 
-    for kk, vv in params.iteritems():
+    for kk, vv in params.items():
         tparams[kk].set_value(vv)
 
 
@@ -244,7 +250,7 @@ def zipp(params, tparams):
 def unzip(zipped):
 
     new_params = OrderedDict()
-    for kk, vv in zipped.iteritems():
+    for kk, vv in zipped.items():
         new_params[kk] = vv.get_value()
 
     return new_params
@@ -252,14 +258,14 @@ def unzip(zipped):
 
 # get the list of parameters: Note that tparams must be OrderedDict
 def itemlist(tparams):
-    return [vv for kk, vv in tparams.iteritems()]
+    return [vv for kk, vv in tparams.items()]
 
 
 # initialize Theano shared variables according to the initial parameters
 def init_tparams(params):
 
     tparams = OrderedDict()
-    for kk, pp in params.iteritems():
+    for kk, pp in params.items():
         tparams[kk] = theano.shared(castX(params[kk]), name=kk)
 
     return tparams
@@ -269,7 +275,7 @@ def init_tparams(params):
 def load_params(path, params):
 
     pp = numpy.load(path)
-    for kk, vv in params.iteritems():
+    for kk, vv in params.items():
         if kk not in pp:
             warnings.warn('%s is not in the archive' % kk)
             continue
@@ -337,10 +343,10 @@ def segment_axis(a, length, overlap=0, axis=None, end='cut', endvalue=0):
     l = a.shape[axis]
 
     if overlap>=length:
-        raise ValueError, "frames cannot overlap by more than 100%"
+        raise ValueError("frames cannot overlap by more than 100%")
     if overlap<0 or length<=0:
-        raise ValueError, "overlap must be nonnegative and length must be "\
-                          "positive"
+        raise ValueError("overlap must be nonnegative and length must be "\
+                          "positive")
 
     if l<length or (l-length)%(length-overlap):
         if l>length:
@@ -374,8 +380,8 @@ def segment_axis(a, length, overlap=0, axis=None, end='cut', endvalue=0):
 
     l = a.shape[axis]
     if l==0:
-        raise ValueError, "Not enough data points to segment array in 'cut' "\
-                          "mode; try 'pad' or 'wrap'"
+        raise ValueError("Not enough data points to segment array in 'cut' "\
+                          "mode; try 'pad' or 'wrap'")
     assert l>=length
     assert (l-length)%(length-overlap) == 0
     n = 1+(l-length)//(length-overlap)

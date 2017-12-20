@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import range
 import ipdb
 import numpy as np
 import theano
@@ -13,7 +15,7 @@ from cle.cle.layers.recurrent import RecurrentLayer
 from cle.cle.utils import totuple, unpack, sharedX
 from cle.cle.utils.op import dropout
 
-from itertools import izip
+
 
 from theano.compat.python2x import OrderedDict
 from theano.tensor.signal.downsample import max_pool_2d
@@ -46,7 +48,7 @@ class MaxPool2D(StemCell):
 
     def initialize_set_shape(self):
 
-        parname, parshape = unpack(self.parent.items())
+        parname, parshape = unpack(list(self.parent.items()))
 
         # Shape should be (batch_size, num_channels, x, y)
         pool_size = totuple(self.pool_size)
@@ -231,10 +233,10 @@ class BatchNormLayer(StemCell):
             idx = np.argmax(ndims)
             ndim = np.maximum(np.array(ndims).max(), 2)
 
-        z_shape = [X[idx].shape[i] for i in xrange(ndim-1)] + [self.nout]
+        z_shape = [X[idx].shape[i] for i in range(ndim-1)] + [self.nout]
         z = T.zeros(z_shape, dtype=theano.config.floatX)
 
-        for x, (parname, parout) in izip(X, self.parent.items()):
+        for x, (parname, parout) in zip(X, list(self.parent.items())):
             W = tparams['W_'+parname+'__'+self.name]
 
             if x.ndim == 1:
@@ -317,7 +319,7 @@ class BatchNormLayer(StemCell):
 
         params = OrderedDict()
 
-        for parname, parout in self.parent.items():
+        for parname, parout in list(self.parent.items()):
             W_shape = (parout, self.nout)
             W_name = 'W_' + parname + '__' + self.name
             params[W_name] = self.init_W.get(W_shape)
@@ -342,7 +344,7 @@ class BatchNormLSTM(RecurrentLayer):
     def get_init_state(self, batch_size):
 
         state = T.zeros((batch_size, 2*self.nout), dtype=theano.config.floatX)
-        state = T.unbroadcast(state, *range(state.ndim))
+        state = T.unbroadcast(state, *list(range(state.ndim)))
 
         return state
 
@@ -365,7 +367,7 @@ class BatchNormLSTM(RecurrentLayer):
         z_t = H[0]
         z = T.zeros((X[0].shape[0], 4*self.nout), dtype=theano.config.floatX)
 
-        for x, (parname, parout) in izip(X, self.parent.items()):
+        for x, (parname, parout) in zip(X, list(self.parent.items())):
             W = tparams['W_'+parname+'__'+self.name]
 
             if x.ndim == 1:
@@ -375,7 +377,7 @@ class BatchNormLSTM(RecurrentLayer):
             else:
                 z += T.dot(x[:, :parout], W)
 
-        for h, (recname, recout) in izip(H, self.recurrent.items()):
+        for h, (recname, recout) in zip(H, list(self.recurrent.items())):
             U = tparams['U_'+recname+'__'+self.name]
             z += T.dot(h[:, :recout], U)
 
@@ -431,16 +433,16 @@ class BatchNormLSTM(RecurrentLayer):
         params = OrderedDict()
         N = self.nout
 
-        for parname, parout in self.parent.items():
+        for parname, parout in list(self.parent.items()):
             W_shape = (parout, 4*N)
             W_name = 'W_' + parname + '__' + self.name
             params[W_name] = self.init_W.get(W_shape)
 
-        for recname, recout in self.recurrent.items():
+        for recname, recout in list(self.recurrent.items()):
             M = recout
             U = self.init_U.ortho((M, N))
 
-            for j in xrange(3):
+            for j in range(3):
                 U = np.concatenate([U, self.init_U.ortho((M, N))], axis=-1)
             U_name = 'U_'+recname+'__'+self.name
             params[U_name] = U

@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import range
 import ipdb
 import numpy as np
 import theano.tensor as T
@@ -35,7 +37,7 @@ def add_noise_params(params, keys=['W'], std_dev=0.075):
 
     nparams = OrderedDict()
 
-    for param in params.items():
+    for param in list(params.items()):
         key_in = 0
         for key in keys:
             if key in param[0]:
@@ -171,7 +173,7 @@ def overlap_sum(X, overlap):
     w_sum = np.zeros(frame_size + (timesteps - 1) * overlap,
                      dtype=np.float32)
     start = 0
-    for i in xrange(timesteps):
+    for i in range(timesteps):
         new_x[start:start+frame_size] += X[i] * w
         w_sum[start:start+frame_size] += w2
         start += overlap
@@ -201,15 +203,15 @@ def batch_overlap_sum(X, overlap):
     w_sum = np.zeros(frame_size + (timesteps - 1) * overlap,
                      dtype=np.float32)
     start = 0
-    for i in xrange(timesteps):
+    for i in range(timesteps):
         w_sum[start:start+frame_size] += w2
         start += overlap
-    for i in xrange(len(X)):
+    for i in range(len(X)):
         timesteps, frame_size = np.array(X[i]).shape
         new_x = np.zeros(frame_size + (timesteps - 1) * overlap,
                          dtype=np.float32)
         start = 0
-        for j in xrange(timesteps):
+        for j in range(timesteps):
             new_x[start:start+frame_size] += X[i][j] * w
             start += overlap
         new_x /= w_sum
@@ -230,7 +232,7 @@ def complex_to_real(X):
     This function assumes X as 2D
     """
     new_X = []
-    for i in xrange(len(X)):
+    for i in range(len(X)):
         x = X[i]
         new_x = np.concatenate([np.real(x), np.imag(x)])
         new_X.append(new_x)
@@ -251,7 +253,7 @@ def real_to_complex(X):
     """
     n = X[0].shape[-1]
     new_X = []
-    for i in xrange(len(X)):
+    for i in range(len(X)):
         x = X[i]
         real = x[:n/2]
         imag = x[n/2:]

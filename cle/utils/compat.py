@@ -1,5 +1,6 @@
 """ Compatibility layer
 """
+from __future__ import unicode_literals
 from theano.compat import six
 
 

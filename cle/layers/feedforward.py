@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import range
 import ipdb
 import numpy as np
 import theano
@@ -5,7 +7,7 @@ import theano.tensor as T
 
 from cle.cle.layers import StemCell, InitCell
 
-from itertools import izip
+
 
 from theano.compat.python2x import OrderedDict
 
@@ -31,10 +33,10 @@ class FullyConnectedLayer(StemCell):
             idx = np.argmax(ndims)
             ndim = np.maximum(np.array(ndims).max(), 2)
 
-        z_shape = [X[idx].shape[i] for i in xrange(ndim-1)] + [self.nout]
+        z_shape = [X[idx].shape[i] for i in range(ndim-1)] + [self.nout]
         z = T.zeros(z_shape, dtype=theano.config.floatX)
 
-        for x, (parname, parout) in izip(X, self.parent.items()):
+        for x, (parname, parout) in zip(X, list(self.parent.items())):
             W = tparams['W_'+parname+'__'+self.name]
 
             if x.ndim == 1:
@@ -86,7 +88,7 @@ class GRBM(StemCell):
     def initialize(self):
 
         params = OrderedDict()
-        parname, parout = self.parent.items()[0]
+        parname, parout = list(self.parent.items())[0]
         W_shape = (parout, self.nout)
         W_name = 'W_' + parname + '__' + self.name
         params[W_name] = self.init_W.get(W_shape)
@@ -101,14 +103,14 @@ class GRBM(StemCell):
         # X could be a list of inputs.
         # depending the number of parents.
         v = X[0]
-        for i in xrange(self.k_step):
+        for i in range(self.k_step):
             v_mean, v, h_mean, h = self.gibbs_step(v, X[1], X[2], X[3])
 
         return v, h
 
     def gibbs_step(self, x, bh, bx, x_sig, tparams):
 
-        parname, parout = self.parent.items()[0]
+        parname, parout = list(self.parent.items())[0]
         W = tparams['W_'+parname+'__'+self.name]
         h_mean = T.nnet.sigmoid(T.dot(x[:, :parout]/(x_sig**2), W) + bh)
         h = self.theano_rng.binomial(size=h_mean.shape, n=1, p=h_mean,
@@ -179,7 +181,7 @@ class VeryDeepFullyConnectedLayer(StemCell):
 
         params = OrderedDict()
 
-        for parname, parout in self.parent.items():
+        for parname, parout in list(self.parent.items()):
             W_shape = (parout, self.nout)
             W_name = 'W_' + parname + '__' + self.name + '_h1'
             params[W_name] = self.init_W.get(W_shape)
@@ -187,7 +189,7 @@ class VeryDeepFullyConnectedLayer(StemCell):
         if self.use_bias:
             params['b_'+self.name + '_h1'] = self.init_b.get(self.nout)
 
-        for l in xrange(1, self.num_layers):
+        for l in range(1, self.num_layers):
             W_shape = (self.nout, self.nout)
             W_name = self.name + '_W_h%d__h%d' % (l, l+1)
             b_name = self.name + '_b_h%d__h%d' % (l, l+1)
@@ -209,10 +211,10 @@ class VeryDeepFullyConnectedLayer(StemCell):
             idx = np.argmax(ndims)
             ndim = np.maximum(np.array(ndims).max(), 2)
 
-        z_shape = [X[idx].shape[i] for i in xrange(ndim-1)] + [self.nout]
+        z_shape = [X[idx].shape[i] for i in range(ndim-1)] + [self.nout]
         z = T.zeros(z_shape, dtype=theano.config.floatX)
 
-        for x, (parname, parout) in izip(X, self.parent.items()):
+        for x, (parname, parout) in zip(X, list(self.parent.items())):
             W_name = 'W_' + parname + '__' + self.name + '_h1'
             W = tparams[W_name]
 
@@ -241,7 +243,7 @@ class VeryDeepFullyConnectedLayer(StemCell):
 
         z = self.nonlin(z)
 
-        for l in xrange(1, self.num_layers):
+        for l in range(1, self.num_layers):
 
             W_name = self.name + '_W_h%d__h%d' % (l, l+1)
             b_name = self.name + '_b_h%d__h%d' % (l, l+1)
@@ -278,7 +280,7 @@ class HighwayNet(StemCell):
 
         params = OrderedDict()
 
-        for parname, parout in self.parent.items():
+        for parname, parout in list(self.parent.items()):
             W_shape = (parout, self.nout)
             W_name = 'W_' + parname + '__' + self.name + '_h1'
             params[W_name] = self.init_W.get(W_shape)
@@ -287,7 +289,7 @@ class HighwayNet(StemCell):
             b_name = 'b_' + self.name + '_h1'
             params[b_name] = self.init_b.get(self.nout)
 
-        for l in xrange(1, self.num_layers):
+        for l in range(1, self.num_layers):
             W_shape = (self.nout, self.nout)
             W_name = self.name + '_W_h%d__h%d' % (l, l+1)
             C_name = self.name + '_C_h%d__h%d' % (l, l+1)
@@ -313,10 +315,10 @@ class HighwayNet(StemCell):
             idx = np.argmax(ndims)
             ndim = np.maximum(np.array(ndims).max(), 2)
 
-        z_shape = [X[idx].shape[i] for i in xrange(ndim-1)] + [self.nout]
+        z_shape = [X[idx].shape[i] for i in range(ndim-1)] + [self.nout]
         z = T.zeros(z_shape, dtype=theano.config.floatX)
 
-        for x, (parname, parout) in izip(X, self.parent.items()):
+        for x, (parname, parout) in zip(X, list(self.parent.items())):
             W_name = 'W_' + parname + '__' + self.name + '_h1'
             W = tparams[W_name]
 
@@ -345,7 +347,7 @@ class HighwayNet(StemCell):
 
         z = self.nonlin(z)
 
-        for l in xrange(1, self.num_layers):
+        for l in range(1, self.num_layers):
 
             W_name = self.name + '_W_h%d__h%d' % (l, l+1)
             C_name = self.name + '_C_h%d__h%d' % (l, l+1)
